@@ -35,6 +35,7 @@ The application is built with reliability and scalability in mind, using asynchr
    CLIENT_ID=your_client_id_here
    CLIENT_SECRET=your_client_secret_here
    ```
+   - Optional variable: `WS_CONNECTION_URL`: WebSocket connection URL (defaults to `wss://test.deribit.com/ws/api/v2`)
 
 ## Running the Application
 
@@ -49,83 +50,7 @@ This will start:
 - Kafka
 - Deribit Orderbook Logger application
 
-To view logs:
-
-```bash
-# View all logs
-docker-compose logs -f
-
-# View only the application logs
-docker-compose logs -f deribit-orderbook-logger
-```
-
-## Stopping the Application
-
-```bash
-docker-compose down
-```
-
-## Configuration
-
-The application can be configured using environment variables in the `.env` file:
-
-- `CLIENT_ID`: Your Deribit API Client ID (required)
-- `CLIENT_SECRET`: Your Deribit API Client Secret (required)
-- `WS_CONNECTION_URL`: WebSocket connection URL (defaults to `wss://test.deribit.com/ws/api/v2`)
-
-## Kafka Topics
-
-The application creates Kafka topics in the format:
-- `deribit.orderbook.{asset}-{expiration}-{CALLS/PUTS}` for options
-- `deribit.orderbook.{instrument}` for other instruments
-
-## Verifying the Application
-
-### Checking Kafka Topics
-
-To verify that the application is working correctly, you can use Kafka CLI tools to check the topics and messages:
-
-1. **List all Kafka topics**:
-
-```bash
-docker exec qcp-kafka-1 kafka-topics --list --bootstrap-server localhost:9092
-```
-
-You should see topics with names starting with `deribit.orderbook`.
-
-2. **View details of a specific topic**:
-
-```bash
-docker exec qcp-kafka-1 kafka-topics --describe --topic deribit.orderbook.BTC-2MAY25-PUTS --bootstrap-server localhost:9092
-```
-
-Replace `deribit.orderbook.BTC-2MAY25-PUTS` with an actual topic from your list.
-
-### Consuming Messages from Kafka
-
-To view the messages being sent to Kafka:
-
-1. **View messages from a specific topic**:
-
-```bash
-docker exec qcp-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic deribit.orderbook.BTC-2MAY25-PUTS --from-beginning
-```
-
-This will show all messages from the beginning. Press Ctrl+C to stop.
-
-2. **View only the latest messages**:
-
-```bash
-docker exec qcp-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic deribit.orderbook.BTC-2MAY25-PUTS
-```
-
-3. **View messages with keys**:
-
-```bash
-docker exec qcp-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic deribit.orderbook.BTC-2MAY25-PUTS --property print.key=true --property key.separator=: --from-beginning
-```
-
-### Checking Application Logs
+### Verifying Connection to Deribit and Orderbook fetching and processing
 
 To verify that the application is connecting to Deribit and processing orderbook updates:
 
@@ -134,6 +59,71 @@ docker-compose logs -f deribit-orderbook-logger
 ```
 
 You should see log messages indicating successful connection to Deribit, authentication, and orderbook updates.
+
+### Verifying Writing of Data to Kafka
+
+The application creates Kafka topics in the format:
+- `deribit.orderbook.{asset}-{expiration}-{CALLS/PUTS}` for options
+- `deribit.orderbook.{instrument}` for other instruments
+
+#### Checking Kafka Topics
+
+   To verify that the application is working correctly, you can use Kafka CLI tools to check the topics and messages:
+   
+   1. **List all Kafka topics**:
+   
+   ```bash
+   docker exec qcp-kafka-1 kafka-topics --list --bootstrap-server localhost:9092
+   ```
+   
+   You should see topics with names starting with `deribit.orderbook`.
+   
+   2. **View details of a specific topic**:
+   
+   ```bash
+   docker exec qcp-kafka-1 kafka-topics --describe --topic deribit.orderbook.BTC-2MAY25-PUTS --bootstrap-server localhost:9092
+   ```
+   
+   Replace `deribit.orderbook.BTC-2MAY25-PUTS` with an actual topic from your list.
+
+#### Consuming Messages from Kafka
+
+   To view the messages being sent to Kafka:
+   
+   1. **View messages from a specific topic**:
+   
+   ```bash
+   docker exec qcp-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic deribit.orderbook.BTC-2MAY25-PUTS --from-beginning
+   ```
+   
+   This will show all messages from the beginning. Press Ctrl+C to stop.
+   
+   2. **View only the latest messages**:
+   
+   ```bash
+   docker exec qcp-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic deribit.orderbook.BTC-2MAY25-PUTS
+   ```
+   
+   3. **View messages with keys**:
+   
+   ```bash
+   docker exec qcp-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic deribit.orderbook.BTC-2MAY25-PUTS --property print.key=true --property key.separator=: --from-beginning
+   ```
+
+## Logging
+```bash
+# View all logs [kafka + zookeeper + orderbook logger]
+docker-compose logs -f
+
+# View application logs [deribit orderbook logger logs]
+docker-compose logs -f deribit-orderbook-logger
+```
+
+## Stopping the Application
+
+```bash
+docker-compose down
+```
 
 ## Design Choices and Alternative Approaches
 
